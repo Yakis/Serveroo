@@ -30,6 +30,9 @@ final class UsersController: RouteCollection {
         // /api/v1/users?username=:username
         users.get(use: searchByName)
         
+        // /api/v1/users?uid=:firebaseUid
+        users.get(use: searchByUid)
+        
     }
     
     
@@ -57,7 +60,19 @@ final class UsersController: RouteCollection {
                 guard let user = user else {
                     throw Abort(.notFound, reason: "Could not find user.")
                 }
-                
+                return user
+            }
+        }
+    }
+    
+    
+    func searchByUid(_ req: Request) throws -> Future<User> {
+        let uid: String = try req.query.get(at: "uid")
+        return req.withNewConnection(to: .psql) { db -> Future<User> in
+            return try db.query(User.self).filter(\.firebaseUid == uid).first().map(to: User.self) { user in
+                guard let user = user else {
+                    throw Abort(.notFound, reason: "Could not find user.")
+                }
                 return user
             }
         }
