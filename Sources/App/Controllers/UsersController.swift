@@ -56,7 +56,7 @@ final class UsersController: RouteCollection {
     func searchByName(_ req: Request) throws -> Future<User> {
         let username: String = try req.query.get(at: "username")
         return req.withNewConnection(to: .psql) { db -> Future<User> in
-            return try db.query(User.self).filter(\.username ~~ username).first().map(to: User.self) { user in
+            return try db.query(User.self).filter(\User.username ~~ username).first().map(to: User.self) { user in
                 guard let user = user else {
                     throw Abort(.notFound, reason: "Could not find user.")
                 }
@@ -81,7 +81,7 @@ final class UsersController: RouteCollection {
     
     func update(_ req: Request) throws -> Future<User> {
         return try req.parameters.next(User.self).flatMap { user in
-            return try req.content.decode(UserContent.self).flatMap { newUser in
+            return try req.content.decode(User.self).flatMap { newUser in
                 user.username = newUser.username ?? user.username
                 user.email = newUser.email ?? user.email
                 user.firstName = newUser.firstName ?? user.firstName
