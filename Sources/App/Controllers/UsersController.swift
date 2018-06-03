@@ -48,13 +48,16 @@ final class UsersController: RouteCollection {
     
     func create(_ req: Request) throws -> Future<User> {
         return try req.content.decode(User.self).flatMap { user in
+            user.username = user.username?.lowercased()
             return user.save(on: req)
         }
     }
     
     
     func searchByName(_ req: Request) throws -> Future<[User]> {
-        let searchedUsername: String = try req.query.get(at: "username")
+        guard let searchedUsername: String = try req.query.get(at: "username") else {
+            throw Abort(.badRequest)
+        }
         return try User.query(on: req).filter(\User.username ~~ searchedUsername).all()
     }
     
