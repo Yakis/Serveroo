@@ -9,21 +9,6 @@ import FluentPostgreSQL
 import Vapor
 
 
-//struct UserContent: Content {
-//
-//    var username: String?
-//    var email: String?
-//    var firstName: String?
-//    var lastName: String?
-//    var contactNumber: String?
-//    var postcode: String?
-//    var avatar: String?
-//    var deviceToken: String?
-//    var firebaseUid: String?
-//    var userType: String?
-//}
-
-
 final class User: PostgreSQLModel {
     
     var id: Int?
