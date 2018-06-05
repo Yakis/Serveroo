@@ -63,7 +63,9 @@ final class UsersController: RouteCollection {
     
     
     func searchByUid(_ req: Request) throws -> Future<User> {
-        let uid: String = try req.query.get(at: "uid")
+        guard let uid: String = try req.query.get(at: "uid") else {
+            throw Abort(.badRequest)
+        }
         return req.withNewConnection(to: .psql) { db -> Future<User> in
             return try db.query(User.self).filter(\.firebaseUid == uid).first().map(to: User.self) { user in
                 guard let user = user else {
@@ -95,10 +97,11 @@ final class UsersController: RouteCollection {
     
     
     func delete(_ req: Request) throws -> Future<HTTPStatus> {
-        return User.query(on: req).all().flatMap(to: HTTPStatus.self) { users in
-            return users[0].delete(on: req).transform(to: HTTPStatus.noContent)
-        }
+        return try req.parameters.next(User.self).flatMap { user in
+            return user.delete(on: req)
+            }.transform(to: .ok)
     }
+    
     
     
     
