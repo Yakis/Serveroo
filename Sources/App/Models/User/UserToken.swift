@@ -12,12 +12,14 @@ final class UserToken: PostgreSQLModel {
     
     var id: Int?
     var token: String
-    var user_id: Int
+    var userId: Int
     
-    init(id: Int? = nil, token: String, user_id: Int) {
+    init(id: Int? = nil,
+         token: String,
+         userId: Int) {
         self.id = id
         self.token = token
-        self.user_id = user_id
+        self.userId = userId
     }
     
 }
