@@ -70,15 +70,15 @@ extension User {
         return children(\.userId)
     }
     
+    var settings: Children<User, Setting> {
+        return children(\.userId)
+    }
     
 //    var reviewComments: Children<User, ReviewComment> {
 //        return children()
 //    }
 //
 //
-//    var settings: Children<User, Setting> {
-//        return children()
-//    }
 //
 //    var postComments: Children<User, PostComment> {
 //        return children()

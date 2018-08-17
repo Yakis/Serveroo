@@ -11,10 +11,10 @@ import Vapor
 
 final class Setting: PostgreSQLModel {
     var id: Int?
-    var trackUpdate: Bool
-    var tagNotify: Bool
-    var locationEnabled: Bool
-    var userId: Int
+    var trackUpdate: Bool?
+    var tagNotify: Bool?
+    var locationEnabled: Bool?
+    var userId: Int?
     
     init(id: Int? = nil,
          trackUpdate: Bool,
