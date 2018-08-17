@@ -69,3 +69,12 @@ extension Track: Content { }
 
 /// Allows `Track` to be used as a dynamic parameter in route definitions.
 extension Track: Parameter { }
+
+extension Track {
+    
+    var images: Children<Track, Image> {
+        return children(\.trackId)
+    }
+    
+}
+

@@ -39,8 +39,15 @@ final class UsersController: RouteCollection {
         // /users/settings?userId=:id
         users.get("settings", use: getSettings)
         
-        // /users/settings?user_id=:id
+        // /users/settings?userId=:id
         users.patch("settings", use: updateSettings)
+        
+        // /users/favoriteTracks?userId=:id
+        users.get("favoriteTracks", use: getFavoriteTracks)
+        
+        // /users/favorites?userId=1&trackId=1
+        users.delete("favorites", use: removeFavorite)
+        
     }
     
     
@@ -119,7 +126,7 @@ final class UsersController: RouteCollection {
 
     
     func getSettings(_ req: Request) throws -> Future<[Setting]> {
-        guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.badRequest) }
+        guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
         return try User.find(userId, on: req).flatMap(to: [Setting].self)  { user in
             guard let unwrappedUser = user else { throw Abort.init(HTTPStatus.notFound) }
             return try unwrappedUser.settings.query(on: req).all()
@@ -140,6 +147,30 @@ final class UsersController: RouteCollection {
             }
         }
     }
+    
+    func getFavoriteTracks(_ req: Request) throws -> Future<[FavoriteTrack]> {
+        guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
+        return try User.find(userId, on: req).flatMap(to: [FavoriteTrack].self)  { user in
+            guard let unwrappedUser = user else { throw Abort.init(HTTPStatus.notFound) }
+            return try unwrappedUser.favoriteTracks.query(on: req).all()
+        }
+    }
+    
+    func removeFavorite(_ req: Request) throws -> Future<HTTPStatus> {
+        guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
+        guard let trackId: Int = try req.query.get(at: "trackId") else { throw Abort(.notFound) }
+        return try FavoriteTrack.query(on: req).filter(\.trackId == trackId).filter(\.userId == userId).first().flatMap { favoriteTracks in
+            guard let favorite = favoriteTracks else { throw Abort(.notFound) }
+            favorite.delete(on: req)
+            return try Track.find(trackId, on: req).flatMap { track in
+                guard let unwrappedTrack = track else { throw Abort(.notFound) }
+                guard let favoritesCount = unwrappedTrack.favoritesCount else { throw Abort(.notFound) }
+                unwrappedTrack.favoritesCount = favoritesCount - 1
+                return unwrappedTrack.save(on: req).transform(to: .ok)
+            }
+        }
+    }
+
     
     
 }

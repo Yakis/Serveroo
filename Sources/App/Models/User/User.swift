@@ -74,6 +74,14 @@ extension User {
         return children(\.userId)
     }
     
+    var favoriteTracks: Children<User, FavoriteTrack> {
+        return children(\.userId)
+    }
+    
+    var ownedTracks: Children<User, Track> {
+        return children(\.userId)
+    }
+    
 //    var reviewComments: Children<User, ReviewComment> {
 //        return children()
 //    }
@@ -93,9 +101,7 @@ extension User {
 //    }
 //
 //
-//    var favoriteTracks: Children<User, FavoriteTrack> {
-//        return children()
-//    }
+
 //
 //
 //    var imageComments: Children<User, ImageComment> {

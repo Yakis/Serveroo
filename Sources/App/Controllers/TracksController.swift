@@ -30,13 +30,16 @@ final class TracksController: RouteCollection {
         // /tracks/search?name=:name
         tracks.get("search", use: searchByName)
         
-        // /tracks?user_id=1
+        // /tracks?userId=1
         tracks.get("", use: getByOwner)
         
-        /*
         // /api/v1/tracks/:id/images
-        routeBuilder.get(Track.parameter, "images", handler: getImages)
+        tracks.get(Track.parameter, "images", use: getImages)
         
+        // /tracks/favorites/create
+        tracks.post("favorites", "create", use: setFavoriteTrack)
+        
+        /*
         // /api/v1/tracks/favorites?user_id=1
         routeBuilder.get("favorites", handler: getFavoriteTracks)
         
@@ -69,22 +72,6 @@ final class TracksController: RouteCollection {
     }
     
     
-    func searchByName(_ req: Request) throws -> Future<[Track]> {
-        guard let searchedName: String = try req.query.get(at: "name") else {
-            throw Abort(.badRequest)
-        }
-        return try Track.query(on: req).filter(\Track.name ~~ searchedName).all()
-    }
-    
-    
-    func getByOwner(_ req: Request) throws -> Future<[Track]> {
-        guard let userId: Int = try req.query.get(at: "userId") else {
-            throw Abort(.badRequest)
-        }
-        return try Track.query(on: req).filter(\Track.userId == userId).all()
-    }
-    
-    
     func update(_ req: Request) throws -> Future<Track> {
         return try req.parameters.next(Track.self).flatMap { track in
             return try req.content.decode(Track.self).flatMap { newTrack in
@@ -113,7 +100,50 @@ final class TracksController: RouteCollection {
             return user.delete(on: req)
             }.transform(to: .ok)
     }
+
+
+    func searchByName(_ req: Request) throws -> Future<[Track]> {
+        guard let searchedName: String = try req.query.get(at: "name") else {
+            throw Abort(.badRequest)
+        }
+        return try Track.query(on: req).filter(\Track.name ~~ searchedName).all()
+    }
     
+    
+//    func getByOwner(_ req: Request) throws -> Future<[Track]> {
+//        return try req.parameters.next(User.self).flatMap({ user in
+//            return try user.tracks.query(on: req).all()
+//        })
+//    }
+    
+    
+    func getByOwner(_ req: Request) throws -> Future<[Track]> {
+        guard let userId: Int = try req.query.get(at: "userId") else {
+            throw Abort(.badRequest)
+        }
+        return try Track.query(on: req).filter(\Track.userId == userId).all()
+    }
+    
+    
+    func getImages(_ req: Request) throws -> Future<[Image]> {
+        return try req.parameters.next(Track.self).flatMap { track in
+            return try track.images.query(on: req).all()
+        }
+    }
+    
+    
+    func setFavoriteTrack(_ req: Request) throws -> Future<Track> {
+        return try req.content.decode(FavoriteTrack.self).flatMap { favoriteTrack in
+            guard let trackId = favoriteTrack.trackId else { throw Abort.init(HTTPStatus.notFound) }
+            return try Track.find(trackId, on: req).flatMap(to: Track.self, { track in
+                favoriteTrack.save(on: req)
+                let favoritesCount = track?.favoritesCount ?? 0
+                track?.favoritesCount = favoritesCount + 1
+                return (track?.save(on: req))!
+                
+            })
+        }
+    }
     
     
     
