@@ -18,17 +18,12 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     services.register(middlewares)
 
-    var databases = DatabasesConfig()
-    let databaseConfig: PostgreSQLDatabaseConfig
-    if let url = Environment.get("DATABASE_URL") { // it will read from this URL in production
-        databaseConfig = (try PostgreSQLDatabaseConfig(url: url))
-    }
-    else { // when environment variable not present, default to local development environment
-        databaseConfig = PostgreSQLDatabaseConfig(hostname: "0.0.0.0", port: 5432, username: "yakis", database: "serveroo", password: nil)
-    }
-    let database = PostgreSQLDatabase(config: databaseConfig)
-    databases.add(database: database, as: .psql)
-    services.register(databases)
+    let psqlConfig = PostgreSQLDatabaseConfig(hostname: "0.0.0.0", port: 5432, username: "yakis", database: "serveroo", password: nil)
+    var dbConfig = DatabasesConfig()
+    
+    let database = PostgreSQLDatabase(config: psqlConfig)
+    dbConfig.add(database: database, as: .psql)
+    services.register(dbConfig)
 
     /// Configure migrations
     var migrations = MigrationConfig()

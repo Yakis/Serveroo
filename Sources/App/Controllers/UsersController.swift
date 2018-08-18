@@ -99,7 +99,7 @@ final class UsersController: RouteCollection {
         guard let searchedUsername: String = try req.query.get(at: "username") else {
             throw Abort(.badRequest)
         }
-        return try User.query(on: req).filter(\User.username ~~ searchedUsername).all()
+        return User.query(on: req).filter(\User.username ~~ searchedUsername).all()
     }
     
     
@@ -107,14 +107,7 @@ final class UsersController: RouteCollection {
         guard let uid: String = try req.query.get(at: "uid") else {
             throw Abort(.badRequest)
         }
-        return req.withNewConnection(to: .psql) { db -> Future<User> in
-            return try db.query(User.self).filter(\.firebaseUid == uid).first().map(to: User.self) { user in
-                guard let user = user else {
-                    throw Abort(.notFound, reason: "Could not find user.")
-                }
-                return user
-            }
-        }
+        return User.query(on: req).filter(\.firebaseUid == uid).first().unwrap(or: Abort(.notFound))
     }
     
     
@@ -127,7 +120,7 @@ final class UsersController: RouteCollection {
     
     func getSettings(_ req: Request) throws -> Future<[Setting]> {
         guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
-        return try User.find(userId, on: req).flatMap(to: [Setting].self)  { user in
+        return User.find(userId, on: req).flatMap(to: [Setting].self)  { user in
             guard let unwrappedUser = user else { throw Abort.init(HTTPStatus.notFound) }
             return try unwrappedUser.settings.query(on: req).all()
         }
@@ -136,7 +129,7 @@ final class UsersController: RouteCollection {
     
     func updateSettings(_ req: Request) throws -> Future<Setting> {
         guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.badRequest) }
-        return try Setting.query(on: req).filter(\.userId == userId).first().flatMap { settings in
+        return Setting.query(on: req).filter(\.userId == userId).first().flatMap { settings in
             guard let settings = settings else { throw Abort(.notFound) }
             return try req.content.decode(Setting.self).flatMap { newSettings in
                 settings.locationEnabled = newSettings.locationEnabled ?? settings.locationEnabled
@@ -150,7 +143,7 @@ final class UsersController: RouteCollection {
     
     func getFavoriteTracks(_ req: Request) throws -> Future<[FavoriteTrack]> {
         guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
-        return try User.find(userId, on: req).flatMap(to: [FavoriteTrack].self)  { user in
+        return User.find(userId, on: req).flatMap(to: [FavoriteTrack].self)  { user in
             guard let unwrappedUser = user else { throw Abort.init(HTTPStatus.notFound) }
             return try unwrappedUser.favoriteTracks.query(on: req).all()
         }
@@ -159,10 +152,10 @@ final class UsersController: RouteCollection {
     func removeFavorite(_ req: Request) throws -> Future<HTTPStatus> {
         guard let userId: Int = try req.query.get(at: "userId") else { throw Abort(.notFound) }
         guard let trackId: Int = try req.query.get(at: "trackId") else { throw Abort(.notFound) }
-        return try FavoriteTrack.query(on: req).filter(\.trackId == trackId).filter(\.userId == userId).first().flatMap { favoriteTracks in
+        return FavoriteTrack.query(on: req).filter(\.trackId == trackId).filter(\.userId == userId).first().flatMap { favoriteTracks in
             guard let favorite = favoriteTracks else { throw Abort(.notFound) }
             favorite.delete(on: req)
-            return try Track.find(trackId, on: req).flatMap { track in
+            return Track.find(trackId, on: req).flatMap { track in
                 guard let unwrappedTrack = track else { throw Abort(.notFound) }
                 guard let favoritesCount = unwrappedTrack.favoritesCount else { throw Abort(.notFound) }
                 unwrappedTrack.favoritesCount = favoritesCount - 1

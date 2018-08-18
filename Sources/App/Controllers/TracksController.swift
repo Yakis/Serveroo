@@ -106,7 +106,7 @@ final class TracksController: RouteCollection {
         guard let searchedName: String = try req.query.get(at: "name") else {
             throw Abort(.badRequest)
         }
-        return try Track.query(on: req).filter(\Track.name ~~ searchedName).all()
+        return Track.query(on: req).filter(\Track.name ~~ searchedName).all()
     }
     
     
@@ -121,7 +121,7 @@ final class TracksController: RouteCollection {
         guard let userId: Int = try req.query.get(at: "userId") else {
             throw Abort(.badRequest)
         }
-        return try Track.query(on: req).filter(\Track.userId == userId).all()
+        return Track.query(on: req).filter(\Track.userId == userId).all()
     }
     
     
@@ -135,7 +135,7 @@ final class TracksController: RouteCollection {
     func setFavoriteTrack(_ req: Request) throws -> Future<Track> {
         return try req.content.decode(FavoriteTrack.self).flatMap { favoriteTrack in
             guard let trackId = favoriteTrack.trackId else { throw Abort.init(HTTPStatus.notFound) }
-            return try Track.find(trackId, on: req).flatMap(to: Track.self, { track in
+            return Track.find(trackId, on: req).flatMap(to: Track.self, { track in
                 favoriteTrack.save(on: req)
                 let favoritesCount = track?.favoritesCount ?? 0
                 track?.favoritesCount = favoritesCount + 1
