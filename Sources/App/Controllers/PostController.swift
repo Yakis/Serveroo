@@ -96,7 +96,7 @@ final class PostController: RouteCollection {
                 let likesCount = unwrappedPost.likesCount ?? 0
                 switch self?.isLiked(like: like, postId: postId, userId: userId) {
                 case true:
-                    like.delete(on: req)
+                    let _ = like.delete(on: req)
                     unwrappedPost.likesCount = likesCount - 1
                     return unwrappedPost.save(on: req)
                 default:
@@ -117,16 +117,7 @@ final class PostController: RouteCollection {
         }
     }
     
-    
-//    func getLikesCount(_ req: Request) throws -> Int {
-//        guard let postId: Int = try req.query.get(at: "postId") else {
-//            throw Abort(.badRequest)
-//        }
-//        try Post.find(postId, on: req).flatMap(to: Post.self) { post in
-//            guard let likesCount = post?.likesCount else { throw Abort(.notFound) }
-//            return likesCount
-//        }
-//    }
+
 
 }
 
