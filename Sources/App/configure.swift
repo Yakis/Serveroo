@@ -21,9 +21,9 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     
     // Configure a Postgres database
     var databases = DatabasesConfig()
-    let databaseConfig: PostgreSQLDatabaseConfig
+    var databaseConfig = PostgreSQLDatabaseConfig(hostname: "0.0.0.0", port: 5432, username: "yakis", database: "serveroo", password: nil)
     if let url = Environment.get("DATABASE_URL") { // it will read from this URL in production
-        databaseConfig = (try PostgreSQLDatabaseConfig(url: url))
+        databaseConfig = (try PostgreSQLDatabaseConfig(url: url))!
     }
     else { // when environment variable not present, default to local development environment
         databaseConfig = PostgreSQLDatabaseConfig(hostname: "0.0.0.0", port: 5432, username: "yakis", database: "serveroo", password: nil)
