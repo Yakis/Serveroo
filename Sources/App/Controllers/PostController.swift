@@ -84,16 +84,12 @@ final class PostController: RouteCollection {
     
     
     func like(_ req: Request) throws -> Future<Post> {
-        guard let userId: Int = try req.query.get(at: "userId") else {
-            throw Abort(.badRequest)
-        }
-        guard let postId: Int = try req.query.get(at: "postId") else {
-            throw Abort(.badRequest)
-        }
         return try req.content.decode(PostLike.self).flatMap { [weak self] like in
             return Post.find(like.postId, on: req).flatMap { [weak self] post in
                 guard let unwrappedPost = post else { throw Abort(.notFound) }
                 let likesCount = unwrappedPost.likesCount ?? 0
+                guard let postId = post?.id else { throw Abort(.badRequest) }
+                guard let userId = post?.userId else { throw Abort(.badRequest) }
                 switch self?.isLiked(like: like, postId: postId, userId: userId) {
                 case true:
                     let _ = like.delete(on: req)
